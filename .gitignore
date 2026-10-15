@@ -40,3 +40,8 @@ opencode.json
 
 # Local deepwork session state
 .slim/deepwork/
+
+# Local platform credentials and inventory (never commit)
+.platform-private/
+work/
+日志.md

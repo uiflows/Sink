@@ -31,13 +31,14 @@
     "deploy:config": "node scripts/cloudflare-deploy-config.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply sink --local",
-    "db:migrate:remote": "pnpm deploy:config && wrangler d1 migrations apply DB --remote --config wrangler.deploy.jsonc",
+    "db:migrate:remote": "pnpm deploy:config && node deploy/verify-bindings.mjs && wrangler d1 migrations apply DB --remote --config wrangler.deploy.jsonc",
     "deploy": "pnpm deploy:pages",
     "deploy:pages": "pnpm db:migrate:remote && wrangler pages deploy dist",
     "deploy:worker": "pnpm db:migrate:remote && wrangler deploy .output/server/index.mjs --assets .output/public --config wrangler.deploy.jsonc",
     "preview": "wrangler dev .output/server/index.mjs --assets .output/public ",
     "postinstall": "pnpm build:map && nuxt prepare",
-    "prepare": "simple-git-hooks"
+    "prepare": "simple-git-hooks",
+    "test:deploy": "node --test deploy/tests/*.node.mjs"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.1.0",

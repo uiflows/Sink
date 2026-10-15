@@ -1,0 +1,16 @@
+{
+  "brand": {
+    "worker": "sink-brand",
+    "database": "sink-brand-db",
+    "kv": "sink-brand-kv",
+    "analytics": "sink_brand",
+    "backup": "sink-brand-backup"
+  },
+  "marketing": {
+    "worker": "sink-marketing",
+    "database": "sink-marketing-db",
+    "kv": "sink-marketing-kv",
+    "analytics": "sink_marketing",
+    "backup": "sink-marketing-backup"
+  }
+}
