@@ -1,8 +1,8 @@
 # sink-platform · 多网站营销短链平台
 
-基于 Sink v0.3.1 的独立部署项目，仓库为 [uiflows/Sink](https://github.com/uiflows/Sink)。保留原版后台，按品牌和营销业务部署两套隔离实例。Cloudflare 操作使用 MCP 的 mac02 连接。
+基于 Sink v0.3.1 的独立部署项目，仓库为 [uiflows/Sink](https://github.com/uiflows/Sink)。保留原版后台，按品牌和营销业务部署两套隔离实例。Cloudflare operations use the operator-selected MCP connection.
 
-**当前状态：部署准备与独立存储创建完成，Worker 发布被 MCP 资产上传 401 阻塞；尚未通过生产验收。**
+**Deployment and production acceptance must be verified from the operator’s private deployment record. This repository alone is not evidence of a live service.**
 
 项目文档：[架构](docs/platform/ARCHITECTURE.md)、[部署](docs/platform/DEPLOYMENT.md)、[资源映射](docs/platform/RESOURCES.md)、[域名](docs/platform/DOMAINS.md)、[运维](docs/platform/OPERATIONS.md)、[安全](docs/platform/SECURITY.md)、[备份恢复](docs/platform/BACKUP-RESTORE.md)、[费用](docs/platform/COST.md)、[验收](docs/platform/ACCEPTANCE.md)。
 
