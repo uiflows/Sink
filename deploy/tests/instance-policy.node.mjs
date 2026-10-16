@@ -45,3 +45,13 @@ test('optional R2 and explicit AI opt-in are supported', () => {
   const config = applyInstancePolicy({ ai: { binding: 'AI' } }, env)
   assert.deepEqual(config.ai, { binding: 'AI' })
 })
+
+test('health monitoring adds a staggered cron while preserving daily backups', () => {
+  const brand = applyInstancePolicy({}, { ...environment('sink-brand'), DEPLOY_HEALTH_ORIGIN: 'https://brand.example.com' })
+  const marketing = applyInstancePolicy({}, { ...environment('sink-marketing'), DEPLOY_HEALTH_ORIGIN: 'https://marketing.example.com' })
+  assert.equal(brand.triggers.crons[0], '0 0 * * *')
+  assert.notEqual(brand.triggers.crons[1], marketing.triggers.crons[1])
+  assert.equal(brand.vars.NUXT_HEALTH_MONITORING, 'true')
+  for (const origin of ['http://brand.example.com', 'https://user:pass@brand.example.com', 'https://brand.example.com/path'])
+    assert.throws(() => applyInstancePolicy({}, { ...environment('sink-brand'), DEPLOY_HEALTH_ORIGIN: origin }), /HTTPS origin/)
+})

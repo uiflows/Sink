@@ -35,6 +35,10 @@ export default defineNuxtConfig({
     listQueryLimit: 500,
     disableBotAccessLog: false,
     disableAutoBackup: false,
+    healthMonitoring: false,
+    healthOrigin: '',
+    healthCanarySlug: '',
+    healthCanaryTarget: '',
     notFoundRedirect: '',
     requireWriteRateLimit: false,
     serverFetchAllowedHosts: '', // Empty by default: require explicit trusted hosts for outbound page fetching.

@@ -36,10 +36,17 @@ export function applyInstancePolicy(config, env) {
     logs: { enabled: true, head_sampling_rate: 1, invocation_logs: false, persist: true },
     traces: { enabled: false },
   }
+  if (env.DEPLOY_HEALTH_ORIGIN) {
+    const origin = new URL(env.DEPLOY_HEALTH_ORIGIN)
+    if (origin.protocol !== 'https:' || origin.username || origin.password || origin.port || origin.pathname !== '/' || origin.search || origin.hash)
+      throw new Error('DEPLOY_HEALTH_ORIGIN must be an HTTPS origin')
+    config.triggers = { crons: ['0 0 * * *', name === 'sink-brand' ? '2,12,22,32,42,52 * * * *' : '7,17,27,37,47,57 * * * *'] }
+  }
   config.vars = {
     ...config.vars,
     NUXT_DATASET: env.DEPLOY_ANALYTICS_DATASET,
     NUXT_REQUIRE_WRITE_RATE_LIMIT: 'true',
+    ...(env.DEPLOY_HEALTH_ORIGIN ? { NUXT_HEALTH_MONITORING: 'true', NUXT_HEALTH_ORIGIN: env.DEPLOY_HEALTH_ORIGIN } : {}),
   }
   return config
 }
