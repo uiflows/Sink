@@ -27,7 +27,7 @@ function generate(name, databaseId, namespaceId, healthOrigin) {
       DEPLOY_WORKER_NAME: name,
       DEPLOY_CF_ACCOUNT_ID: '00000000000000000000000000000000',
       DEPLOY_ENABLE_AI: 'false',
-      ...(healthOrigin ? { DEPLOY_HEALTH_ORIGIN: healthOrigin } : {}),
+      DEPLOY_HEALTH_ORIGIN: healthOrigin || '',
       DEPLOY_D1_DATABASE_ID: databaseId,
       DEPLOY_D1_DATABASE_NAME: `${name}-db`,
       DEPLOY_KV_NAMESPACE_ID: namespaceId,

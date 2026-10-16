@@ -1,11 +1,11 @@
 # 域名与路由
 
-2026-10-15 通过 mac02 Cloudflare MCP 核实可见 Zone：aweb3.cc、nsyuop.me、panmjo.tech、us4v.com，均为 active。DNS 记录数依次为 14、7、27、16。
+两套 Sink 使用各自的 workers.dev 测试入口。实际地址、账号、现有域名和 DNS 盘点保存在私有运维记录，不将账户资源清单发布到公共仓库。当前已经发布原版后台，完整 P0 验收仍在进行。
 
-这些域名都有现有记录，不能因为可见就视为可用于 Sink。现有 hub.nsyuop.me 路由对应 social-agent-hub，列为保护对象。
+品牌短域名与营销短域名均待用户指定。没有创建、修改或删除现有生产 DNS、Zone、Worker Routes、Custom Domains 或 Tunnel。用户现有的 Social-Agent-Hub 及其路由是保护对象。
 
-品牌短域名 A 与营销短域名 B 均待用户指定。本轮没有创建、修改或删除 DNS、Zone、Worker Routes、Custom Domains 或 Tunnel。
+已有主站域名不能因为账号可见就视为可以分配给 Sink。正式域名用途确认、完整验收通过后，才为对应实例申请绑定；不自动购买域名或升级套餐。
 
-未来测试地址计划为 sink-brand.alqjwdawlily.workers.dev 与 sink-marketing.alqjwdawlily.workers.dev；目前 Worker 未发布，这两个地址不是已验收的可用入口。
+域名资产记录应包含所属品牌、项目、用途、Zone、注册商、到期日期、Worker、创建时间、最近检查时间、健康状态和平台限制记录。注册到期日须来自注册商或权威账号资料，不能从 Zone 创建日期推算。HTTPS 访问成功也不能代替证书到期日期核实。
 
-正式域名确认后，资产记录须包含域名、品牌、项目、用途、Zone、注册商、到期时间、Worker、创建时间、检查时间、健康状态和平台限制记录。当前 API 未能核实到期日，不从 Zone 创建日期推算。
+健康状态及故障恢复事件由各实例独立保存。人工平台限制通知和申诉资料应登记原始证据；普通 HTTP 检查不能判断第三方平台内部信誉。
