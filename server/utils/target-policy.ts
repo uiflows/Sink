@@ -56,7 +56,7 @@ async function checkTargetReputation(host: string): Promise<void> {
       // Only the hostname reaches this fixed resolver; never fetch user target content.
       const response = await fetch(`https://security.cloudflare-dns.com/dns-query?name=${encodeURIComponent(host)}&type=${type}`, {
         headers: { accept: 'application/dns-json' },
-        redirect: 'error',
+        redirect: 'manual',
         signal: AbortSignal.timeout(5000),
       })
       if (!response.ok)

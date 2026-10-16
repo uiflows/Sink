@@ -52,9 +52,11 @@ export async function fetchPageMarkdown(event: H3Event, url: string, AI: Ai): Pr
     if (acceptLanguage)
       headers.set('Accept-Language', acceptLanguage)
 
-    const response = await fetch(target, { headers, signal: controller.signal, redirect: 'error' })
-    if (!response.ok)
+    const response = await fetch(target, { headers, signal: controller.signal, redirect: 'manual' })
+    if (!response.ok) {
+      await response.body?.cancel()
       throw new Error(`HTTP ${response.status}`)
+    }
 
     const contentType = response.headers.get('content-type') || ''
     const body = await readLimitedBody(response)
@@ -76,13 +78,13 @@ export async function fetchPageMarkdown(event: H3Event, url: string, AI: Ai): Pr
           return result.data.slice(0, MAX_MARKDOWN_LENGTH)
         }
       }
-      catch (err) {
-        console.warn(`[markdown] AI.toMarkdown() failed for ${url}:`, err)
+      catch {
+        console.warn({ event: 'metadata.conversion.failed' })
       }
     }
   }
-  catch (err) {
-    console.warn(`[markdown] Failed to fetch ${url}:`, err)
+  catch {
+    console.warn({ event: 'metadata.fetch.failed' })
   }
   finally {
     clearTimeout(timeout)

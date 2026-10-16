@@ -91,7 +91,7 @@ export async function proxyLinkRequest(event: H3Event, targetUrl: string, option
   const init: RequestInit & { duplex?: 'half' } = {
     method,
     headers: buildForwardHeaders(event),
-    redirect: 'error',
+    redirect: 'manual',
     signal: controller.signal,
   }
   if (method !== 'GET' && method !== 'HEAD') {
@@ -111,5 +111,9 @@ export async function proxyLinkRequest(event: H3Event, targetUrl: string, option
     clearTimeout(timer)
   }
 
+  if (upstream.status >= 300 && upstream.status < 400) {
+    await upstream.body?.cancel()
+    throw createError({ status: 502, statusText: 'Proxy upstream redirects require review' })
+  }
   return buildUpstreamResponse(upstream, options.privateCache ?? false)
 }

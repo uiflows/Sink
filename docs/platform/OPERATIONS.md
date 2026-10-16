@@ -12,6 +12,8 @@
 
 同一检查连续两轮失败后记录 incident，持续故障最多每 6 小时再次写入错误日志；现有按实例区分的 Cloudflare 错误邮件策略负责通知。全部故障恢复后记录 recovered。KV 读写故障会立即写入错误日志，因为状态不可用时无法可靠执行连续失败判断。KV 为最终一致存储，不是严格的全球事件锁。
 
+Workers 网络请求使用平台支持的 manual 模式，并由调用方检查响应码拒绝继续跳转；公开回环探测通过 global_fetch_strictly_public 兼容标志进入同一实例的公网入口。定时检查从当前调度事件绑定读取运行配置，不依赖模块初始化时的配置缓存。
+
 最新检查及最近 20 个 incident/recovered 事件保存在本实例 KV；7 天无新检查会过期。`GET /api/health` 返回检查状态及是否已超过 30 分钟，`POST /api/health/check` 可人工执行一次；两者均沿用管理员鉴权，手动执行受写入限流保护，响应禁止缓存。未配置的能力明确显示 not-configured。
 
 若配置 `NUXT_HEALTH_CANARY_SLUG` 与 `NUXT_HEALTH_CANARY_TARGET`，可检查专用测试短链的状态码与 Location。最终目标检查还要求该主机存在于 `NUXT_SERVER_FETCH_ALLOWED_HOSTS` 精确可信列表，仅接受直接 2xx；不跟随多层重定向。配置前必须核实目标控制权和 DNS；本项目不提供 DNS 固定或重绑定防护保证。当前未配置专用短链，不能将其描述为已覆盖所有业务链接。短链探测可能写入测试访问统计，应使用专门的合成测试链接。

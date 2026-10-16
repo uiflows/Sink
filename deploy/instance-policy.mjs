@@ -22,6 +22,7 @@ export function applyInstancePolicy(config, env) {
   config.name = name
   config.workers_dev = true
   config.preview_urls = false
+  config.compatibility_flags = [...new Set([...(config.compatibility_flags || []), 'global_fetch_strictly_public'])]
   // AI remains opt-in; deploying a binding must not silently enable paid inference.
   if (env.DEPLOY_ENABLE_AI !== 'true')
     delete config.ai

@@ -20,6 +20,7 @@ for (const name of ['sink-brand', 'sink-marketing']) {
     assert.equal(config.ai, undefined)
     assert.equal(config.workers_dev, true)
     assert.equal(config.preview_urls, false)
+    assert.ok(config.compatibility_flags.includes('global_fetch_strictly_public'))
   })
 }
 

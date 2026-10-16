@@ -45,7 +45,7 @@ describe('enforced target policy', () => {
       expect(url.startsWith('https://security.cloudflare-dns.com/dns-query?')).toBe(true)
       expect(url).not.toContain('private')
       expect(url).not.toContain('token')
-      expect(init.redirect).toBe('error')
+      expect(init.redirect).toBe('manual')
     }
   })
   it('enforces exact manual host approvals and deny rules without subdomain inheritance', async () => {

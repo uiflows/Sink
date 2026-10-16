@@ -28,6 +28,23 @@ export interface HealthConfig {
   redirectStatusCode: string
 }
 
+export function scheduledHealthSettings(bindings: Record<string, unknown>, fallback: HealthConfig & { healthMonitoring: boolean }) {
+  const read = (name: string, value: string) => String(bindings[name] ?? value)
+  return {
+    enabled: String(bindings.NUXT_HEALTH_MONITORING ?? fallback.healthMonitoring) === 'true',
+    config: {
+      healthOrigin: read('NUXT_HEALTH_ORIGIN', fallback.healthOrigin),
+      healthCanarySlug: read('NUXT_HEALTH_CANARY_SLUG', fallback.healthCanarySlug),
+      healthCanaryTarget: read('NUXT_HEALTH_CANARY_TARGET', fallback.healthCanaryTarget),
+      serverFetchAllowedHosts: read('NUXT_SERVER_FETCH_ALLOWED_HOSTS', fallback.serverFetchAllowedHosts),
+      cfAccountId: read('NUXT_CF_ACCOUNT_ID', fallback.cfAccountId),
+      cfApiToken: read('NUXT_CF_API_TOKEN', fallback.cfApiToken),
+      dataset: read('NUXT_DATASET', fallback.dataset),
+      redirectStatusCode: read('NUXT_REDIRECT_STATUS_CODE', fallback.redirectStatusCode),
+    },
+  }
+}
+
 function ownOrigin(value: string): string {
   const url = new URL(value)
   if (url.protocol !== 'https:' || !isPublicTargetUrl(value) || url.port || url.pathname !== '/' || url.search || url.hash)
@@ -39,9 +56,11 @@ async function check(name: CheckName, run: () => Promise<boolean>, code: string)
   try {
     return { name, status: await run() ? 'ok' : 'failed', code }
   }
-  catch {
-    // Never retain provider errors, request headers or target URLs in reports/logs.
-    return { name, status: 'failed', code }
+  catch (error) {
+    // Retain only static diagnostic categories, never provider error text or headers.
+    const message = error instanceof Error ? error.message : ''
+    const reason = message.includes('Illegal invocation') ? 'invalid-receiver' : message.includes('AbortSignal') ? 'runtime-signal' : 'request-failed'
+    return { name, status: 'failed', code: `${code}:${reason}` }
   }
 }
 
@@ -77,10 +96,10 @@ export async function readHealthState(env: Cloudflare.Env): Promise<HealthState 
   return value?.version === 1 && Array.isArray(value.checks) && Array.isArray(value.events) ? value : null
 }
 
-export async function runHealthMonitor(env: Cloudflare.Env, config: HealthConfig, fetcher: typeof fetch = fetch, now = Date.now()): Promise<HealthState> {
+export async function runHealthMonitor(env: Cloudflare.Env, config: HealthConfig, fetcher: typeof fetch = (input, init) => globalThis.fetch(input, init), now = Date.now()): Promise<HealthState> {
   const origin = ownOrigin(config.healthOrigin)
   const hostname = new URL(origin).hostname
-  const request = (url: string, init: RequestInit = {}) => fetcher(url, { ...init, redirect: 'error', signal: AbortSignal.timeout(8000) })
+  const request = (url: string, init: RequestInit = {}) => fetcher(url, { ...init, redirect: 'manual', signal: AbortSignal.timeout(8000) })
   let previous: HealthState | null = null
   const kv = await check('kv', async () => {
     previous = await readHealthState(env)

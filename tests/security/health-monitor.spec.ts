@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { advanceHealthState, HEALTH_STATE_KEY, runHealthMonitor } from '../../monitoring/health'
+import { advanceHealthState, HEALTH_STATE_KEY, runHealthMonitor, scheduledHealthSettings } from '../../monitoring/health'
 
 const now = Date.parse('2026-10-16T04:00:00Z')
 const config = {
@@ -42,7 +42,7 @@ describe('cloud health monitoring', () => {
     expect(state.checks.filter(check => check.status === 'not-configured').map(check => check.name)).toEqual(['redirect', 'target'])
     expect(put).toHaveBeenCalledWith(HEALTH_STATE_KEY, expect.any(String), { expirationTtl: 604800 })
     expect(JSON.stringify(state)).not.toContain(config.cfApiToken)
-    expect(fetcher.mock.calls.every(([, init]) => init?.redirect === 'error')).toBe(true)
+    expect(fetcher.mock.calls.every(([, init]) => init?.redirect === 'manual')).toBe(true)
   })
   it('confirms the same failure twice and records recovery without repeated alerts', async () => {
     const { env, dbRead, fetcher } = fixture()
@@ -140,5 +140,15 @@ describe('scheduled backup routing', () => {
     await import('../../server/plugins/backup')
     await expect(handler({ controller: { cron: '0 0 * * *' }, env: {} })).rejects.toThrow('Scheduled backup failed')
     expect(error).toHaveBeenCalledWith({ event: 'backup.scheduled.failed' })
+  })
+})
+
+describe('scheduled runtime bindings', () => {
+  it('uses current Worker bindings when the module-level fallback was disabled', () => {
+    const result = scheduledHealthSettings({ NUXT_HEALTH_MONITORING: 'true', NUXT_HEALTH_ORIGIN: 'https://current.example.com', NUXT_CF_API_TOKEN: 'current-private-read-token' }, { ...config, healthMonitoring: false })
+    expect(result.enabled).toBe(true)
+    expect(result.config.healthOrigin).toBe('https://current.example.com')
+    expect(result.config.cfApiToken).toBe('current-private-read-token')
+    expect(scheduledHealthSettings({ NUXT_HEALTH_MONITORING: 'false' }, { ...config, healthMonitoring: true }).enabled).toBe(false)
   })
 })

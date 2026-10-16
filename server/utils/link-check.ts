@@ -44,7 +44,7 @@ async function checkLink(
   try {
     const response = await ofetch.raw(link.url, {
       method: 'GET',
-      redirect: 'error',
+      redirect: 'manual',
       headers,
       timeout: timeoutSeconds * 1000,
       ignoreResponseError: true,
@@ -58,7 +58,8 @@ async function checkLink(
     return {
       ...link,
       status,
-      ok: status < 400,
+      ok: status >= 200 && status < 300,
+      ...(status >= 300 && status < 400 ? { error: 'Redirect requires manual review' } : {}),
       duration: Date.now() - startedAt,
       checkedAt,
     }
