@@ -34,7 +34,7 @@
     "db:migrate:remote": "pnpm deploy:config && node deploy/verify-bindings.mjs && wrangler d1 migrations apply DB --remote --config wrangler.deploy.jsonc",
     "deploy": "pnpm deploy:pages",
     "deploy:pages": "pnpm db:migrate:remote && wrangler pages deploy dist",
-    "deploy:worker": "pnpm db:migrate:remote && wrangler deploy .output/server/index.mjs --assets .output/public --config wrangler.deploy.jsonc",
+    "deploy:worker": "pnpm db:migrate:remote && wrangler deploy .output/server/index.mjs --assets .output/public --config wrangler.deploy.jsonc && node deploy/post-deploy-settings.mjs",
     "preview": "wrangler dev .output/server/index.mjs --assets .output/public ",
     "postinstall": "pnpm build:map && nuxt prepare",
     "prepare": "simple-git-hooks",
