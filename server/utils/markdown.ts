@@ -1,5 +1,6 @@
 import type { H3Event } from 'h3'
 import { getHeader } from 'h3'
+import { isServerFetchAllowed } from './server-fetch-policy'
 
 const MAX_RESPONSE_BYTES = 256 * 1024
 const MAX_MARKDOWN_LENGTH = 4096
@@ -41,7 +42,7 @@ export async function fetchPageMarkdown(event: H3Event, url: string, AI: Ai): Pr
 
   try {
     const target = new URL(url)
-    if (target.protocol !== 'http:' && target.protocol !== 'https:')
+    if (!isServerFetchAllowed(event, url))
       return null
 
     const headers = new Headers({
@@ -51,9 +52,11 @@ export async function fetchPageMarkdown(event: H3Event, url: string, AI: Ai): Pr
     if (acceptLanguage)
       headers.set('Accept-Language', acceptLanguage)
 
-    const response = await fetch(target, { headers, signal: controller.signal })
-    if (!response.ok)
+    const response = await fetch(target, { headers, signal: controller.signal, redirect: 'manual' })
+    if (!response.ok) {
+      await response.body?.cancel()
       throw new Error(`HTTP ${response.status}`)
+    }
 
     const contentType = response.headers.get('content-type') || ''
     const body = await readLimitedBody(response)
@@ -75,13 +78,13 @@ export async function fetchPageMarkdown(event: H3Event, url: string, AI: Ai): Pr
           return result.data.slice(0, MAX_MARKDOWN_LENGTH)
         }
       }
-      catch (err) {
-        console.warn(`[markdown] AI.toMarkdown() failed for ${url}:`, err)
+      catch {
+        console.warn({ event: 'metadata.conversion.failed' })
       }
     }
   }
-  catch (err) {
-    console.warn(`[markdown] Failed to fetch ${url}:`, err)
+  catch {
+    console.warn({ event: 'metadata.fetch.failed' })
   }
   finally {
     clearTimeout(timeout)

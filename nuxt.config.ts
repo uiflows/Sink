@@ -35,7 +35,16 @@ export default defineNuxtConfig({
     listQueryLimit: 500,
     disableBotAccessLog: false,
     disableAutoBackup: false,
+    healthMonitoring: false,
+    healthOrigin: '',
+    healthCanarySlug: '',
+    healthCanaryTarget: '',
     notFoundRedirect: '',
+    requireWriteRateLimit: false,
+    targetRiskCheck: false,
+    targetAllowedHosts: '',
+    targetDeniedHosts: '',
+    serverFetchAllowedHosts: '', // Empty by default: require explicit trusted hosts for outbound page fetching.
     safeBrowsingDoh: '', // Set to DoH URL to enable auto-detection, e.g. https://family.cloudflare-dns.com/dns-query
     webhookUrl: '',
     webhookSecret: '',

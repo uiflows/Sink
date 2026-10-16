@@ -2,6 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { parseEnv } from 'node:util'
 import { parse, printParseErrorCode } from 'jsonc-parser'
 import { z } from 'zod'
+import { applyInstancePolicy } from '../deploy/instance-policy.mjs'
 
 const rootDir = new URL('../', import.meta.url)
 const sourcePath = new URL('wrangler.jsonc', rootDir)
@@ -19,6 +20,10 @@ const optionalName = z.preprocess(
 )
 
 const deployEnvSchema = z.object({
+  DEPLOY_WORKER_NAME: optionalName,
+  DEPLOY_CF_ACCOUNT_ID: optionalName,
+  DEPLOY_ENABLE_AI: optionalName,
+  DEPLOY_HEALTH_ORIGIN: optionalName,
   DEPLOY_D1_DATABASE_ID: z.string().trim().min(1),
   DEPLOY_KV_NAMESPACE_ID: z.string().trim().min(1),
   // Optional Wrangler preview binding; falls back to DEPLOY_KV_NAMESPACE_ID
@@ -68,6 +73,7 @@ if (parseErrors.length > 0) {
 }
 
 const env = await loadEnv()
+applyInstancePolicy(config, env)
 const d1 = getBinding(config, 'd1_databases', 'DB')
 const kv = getBinding(config, 'kv_namespaces', 'KV')
 const analytics = getBinding(config, 'analytics_engine_datasets', 'ANALYTICS')

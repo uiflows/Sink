@@ -4,7 +4,7 @@ import { getHeader } from 'h3'
 import { ofetch } from 'ofetch'
 import { toErrorMessage } from '#shared/utils/error'
 import { listLinks } from './link-store'
-import { isPublicHttpUrl } from './public-url'
+import { isServerFetchAllowed } from './server-fetch-policy'
 
 const SAFE_FORWARDED_HEADERS = ['accept-language', 'user-agent'] as const
 
@@ -24,12 +24,13 @@ async function checkLink(
   target: { slug: string, url: string },
   headers: Headers,
   timeoutSeconds: number,
+  event: H3Event,
 ): Promise<LinkCheckResult> {
   const startedAt = Date.now()
   const checkedAt = new Date().toISOString()
   const link = target
 
-  if (!isPublicHttpUrl(link.url)) {
+  if (!isServerFetchAllowed(event, link.url)) {
     return {
       ...link,
       status: 0,
@@ -43,6 +44,7 @@ async function checkLink(
   try {
     const response = await ofetch.raw(link.url, {
       method: 'GET',
+      redirect: 'manual',
       headers,
       timeout: timeoutSeconds * 1000,
       ignoreResponseError: true,
@@ -56,7 +58,8 @@ async function checkLink(
     return {
       ...link,
       status,
-      ok: status < 400,
+      ok: status >= 200 && status < 300,
+      ...(status >= 300 && status < 400 ? { error: 'Redirect requires manual review' } : {}),
       duration: Date.now() - startedAt,
       checkedAt,
     }
@@ -83,7 +86,7 @@ export async function checkLinksPage(event: H3Event, { cursor, limit, timeout }:
   })
 
   return {
-    results: await Promise.all(page.links.map(({ slug, url }) => checkLink({ slug, url }, headers, timeout))),
+    results: await Promise.all(page.links.map(({ slug, url }) => checkLink({ slug, url }, headers, timeout, event))),
     cursor: page.cursor,
     list_complete: page.list_complete,
   }
