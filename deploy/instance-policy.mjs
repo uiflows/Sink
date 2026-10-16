@@ -46,6 +46,7 @@ export function applyInstancePolicy(config, env) {
     ...config.vars,
     NUXT_DATASET: env.DEPLOY_ANALYTICS_DATASET,
     NUXT_REQUIRE_WRITE_RATE_LIMIT: 'true',
+    NUXT_TARGET_RISK_CHECK: 'true',
     ...(env.DEPLOY_HEALTH_ORIGIN ? { NUXT_HEALTH_MONITORING: 'true', NUXT_HEALTH_ORIGIN: env.DEPLOY_HEALTH_ORIGIN } : {}),
   }
   return config

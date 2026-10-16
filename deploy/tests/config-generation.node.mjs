@@ -18,7 +18,7 @@ function fixture() {
   return dir
 }
 
-function generate(name, databaseId, namespaceId) {
+function generate(name, databaseId, namespaceId, healthOrigin) {
   const dir = fixture()
   execFileSync(process.execPath, [path.join(dir, 'scripts/cloudflare-deploy-config.mjs')], {
     cwd: dir,
@@ -27,6 +27,7 @@ function generate(name, databaseId, namespaceId) {
       DEPLOY_WORKER_NAME: name,
       DEPLOY_CF_ACCOUNT_ID: '00000000000000000000000000000000',
       DEPLOY_ENABLE_AI: 'false',
+      ...(healthOrigin ? { DEPLOY_HEALTH_ORIGIN: healthOrigin } : {}),
       DEPLOY_D1_DATABASE_ID: databaseId,
       DEPLOY_D1_DATABASE_NAME: `${name}-db`,
       DEPLOY_KV_NAMESPACE_ID: namespaceId,
@@ -60,4 +61,12 @@ test('the real generator refuses an unset instance before a deployment configura
   const env = { ...process.env, DEPLOY_D1_DATABASE_ID: 'test', DEPLOY_KV_NAMESPACE_ID: 'test' }
   delete env.DEPLOY_WORKER_NAME
   assert.throws(() => execFileSync(process.execPath, [path.join(dir, 'scripts/cloudflare-deploy-config.mjs')], { cwd: dir, env, stdio: 'pipe' }), /DEPLOY_WORKER_NAME/)
+})
+
+test('the generator preserves the health origin through environment parsing', () => {
+  const config = generate('sink-brand', '11111111-1111-4111-8111-111111111111', '11111111111111111111111111111111', 'https://sink-brand.example.com')
+  assert.equal(config.vars.NUXT_HEALTH_ORIGIN, 'https://sink-brand.example.com')
+  assert.equal(config.vars.NUXT_HEALTH_MONITORING, 'true')
+  assert.equal(config.vars.NUXT_TARGET_RISK_CHECK, 'true')
+  assert.equal(config.triggers.crons.length, 2)
 })

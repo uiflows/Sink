@@ -23,6 +23,7 @@ const deployEnvSchema = z.object({
   DEPLOY_WORKER_NAME: optionalName,
   DEPLOY_CF_ACCOUNT_ID: optionalName,
   DEPLOY_ENABLE_AI: optionalName,
+  DEPLOY_HEALTH_ORIGIN: optionalName,
   DEPLOY_D1_DATABASE_ID: z.string().trim().min(1),
   DEPLOY_KV_NAMESPACE_ID: z.string().trim().min(1),
   // Optional Wrangler preview binding; falls back to DEPLOY_KV_NAMESPACE_ID

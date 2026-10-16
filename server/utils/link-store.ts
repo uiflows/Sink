@@ -22,6 +22,7 @@ import {
 import { deleteLinkCache, isActiveLinkExpiration, putLinkCache, readLegacyKvLink } from '../services/link-store/kv'
 import { insertMigratedKvLink, readCompletedLinkMigrationMarker } from '../services/link-store/migration'
 import { logLinkMutation } from './link-audit'
+import { assertLinkTargetsAllowed } from './target-policy'
 
 export function normalizeSlug(event: H3Event, slug: string): string {
   const { caseSensitive } = useRuntimeConfig(event)
@@ -71,6 +72,7 @@ export async function getLinkWithMetadata(event: H3Event, slug: string): Promise
 }
 
 export async function createLink(event: H3Event, link: Link): Promise<boolean> {
+  await assertLinkTargetsAllowed(event, link)
   const result = await d1CreateLink(event, link)
   if (!result.created)
     return false
@@ -97,6 +99,21 @@ async function writeThroughCaches(event: H3Event, links: { link: Link, effective
 }
 
 export async function createLinks(event: H3Event, links: Link[]): Promise<CreateLinksResult[]> {
+  const policyResults = await Promise.all(links.map(async (link) => {
+    try {
+      await assertLinkTargetsAllowed(event, link)
+      return null
+    }
+    catch (error) {
+      return { error }
+    }
+  }))
+  if (policyResults.some(Boolean)) {
+    const allowed = links.filter((_, index) => !policyResults[index])
+    const written = allowed.length ? await createLinks(event, allowed) : []
+    let index = 0
+    return policyResults.map(result => result || written[index++]!)
+  }
   let results: Awaited<ReturnType<typeof d1CreateLinks>>
   try {
     results = await d1CreateLinks(event, links)
@@ -137,6 +154,7 @@ export async function migrateKvLink(event: H3Event, link: Link, effectiveExpires
 }
 
 export async function updateLink(event: H3Event, link: Link, expected?: ExpectedLinkVersion): Promise<boolean> {
+  await assertLinkTargetsAllowed(event, link)
   const result = await d1UpdateLink(event, link, expected)
   if (!result.updated)
     return false

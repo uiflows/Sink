@@ -10,7 +10,7 @@
 
 ---
 
-# ⚡ Sink
+## ⚡ Sink
 
 **A Simple, Speedy, Secure, and Serverless Link Shortener with Analytics, Running Entirely on Cloudflare.**
 
