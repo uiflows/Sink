@@ -38,7 +38,8 @@
     "preview": "wrangler dev .output/server/index.mjs --assets .output/public ",
     "postinstall": "pnpm build:map && nuxt prepare",
     "prepare": "simple-git-hooks",
-    "test:deploy": "node --test deploy/tests/*.node.mjs"
+    "test:deploy": "node --test deploy/tests/*.node.mjs",
+    "test:security": "vitest run --config vitest.security.config.ts"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.1.0",

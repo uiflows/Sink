@@ -21,6 +21,7 @@ import {
 } from '../services/link-store/d1'
 import { deleteLinkCache, isActiveLinkExpiration, putLinkCache, readLegacyKvLink } from '../services/link-store/kv'
 import { insertMigratedKvLink, readCompletedLinkMigrationMarker } from '../services/link-store/migration'
+import { logLinkMutation } from './link-audit'
 
 export function normalizeSlug(event: H3Event, slug: string): string {
   const { caseSensitive } = useRuntimeConfig(event)
@@ -73,6 +74,7 @@ export async function createLink(event: H3Event, link: Link): Promise<boolean> {
   const result = await d1CreateLink(event, link)
   if (!result.created)
     return false
+  logLinkMutation(event, 'create', link.slug)
   await writeThroughCache(event, link, result.effectiveExpiresAt)
   return true
 }
@@ -113,6 +115,8 @@ export async function createLinks(event: H3Event, links: Link[]): Promise<Create
   }
 
   const successful = results.flatMap((result, index) => result.created ? [{ link: links[index]!, effectiveExpiresAt: result.effectiveExpiresAt }] : [])
+  for (const item of successful)
+    logLinkMutation(event, 'create', item.link.slug)
   try {
     await writeThroughCaches(event, successful)
   }
@@ -136,12 +140,14 @@ export async function updateLink(event: H3Event, link: Link, expected?: Expected
   const result = await d1UpdateLink(event, link, expected)
   if (!result.updated)
     return false
+  logLinkMutation(event, 'update', link.slug)
   await writeThroughCache(event, link, result.effectiveExpiresAt)
   return true
 }
 
 export async function deleteLink(event: H3Event, slug: string): Promise<void> {
   await d1DeleteLink(event, slug)
+  logLinkMutation(event, 'delete', slug)
   await deleteLinkCache(event, slug)
 }
 

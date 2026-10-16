@@ -1,6 +1,7 @@
 import { customAlphabet } from 'nanoid'
 import { z } from 'zod'
 import { LINK_PASSWORD_MASK_PREFIX } from '../utils/link-password'
+import { isPublicTargetUrl } from '../utils/public-url'
 
 const { slugRegex, reserveSlug } = useAppConfig()
 
@@ -92,18 +93,27 @@ export const LinkFieldsSchema = z.object({
   tags: TagsSchema.describe('Up to 10 normalized link tags, each 1-32 characters.'),
 })
 
-export const CreateLinkSchema = LinkFieldsSchema.extend({
+// Apply the public-target policy only to writes. Stored and legacy records stay readable.
+const PublicUrlSchema = UrlSchema.refine(isPublicTargetUrl, 'Target must be a public HTTP or HTTPS URL without embedded credentials')
+const WritableLinkFieldsSchema = LinkFieldsSchema.extend({
+  url: PublicUrlSchema.describe('The public target URL.'),
+  apple: PublicUrlSchema.optional().describe('Public Apple App Store redirect URL.'),
+  google: PublicUrlSchema.optional().describe('Public Google Play Store redirect URL.'),
+  geo: GeoSchema.refine(value => Object.values(value).every(isPublicTargetUrl), 'Geo targets must be public HTTP or HTTPS URLs').optional(),
+})
+
+export const CreateLinkSchema = WritableLinkFieldsSchema.extend({
   id: IdSchema.default(nanoid(10)),
   slug: NewSlugSchema.default(nanoid()),
   createdAt: TimestampSchema.default(() => Math.floor(Date.now() / 1000)),
   updatedAt: TimestampSchema.default(() => Math.floor(Date.now() / 1000)),
 })
 
-export const EditLinkSchema = LinkFieldsSchema.extend({
+export const EditLinkSchema = WritableLinkFieldsSchema.extend({
   password: EditLinkPasswordSchema,
 })
 
-export const ImportLinkSchema = LinkFieldsSchema.extend({
+export const ImportLinkSchema = WritableLinkFieldsSchema.extend({
   slug: NewSlugSchema,
   id: z.preprocess(value => typeof value === 'string' && !value.trim() ? undefined : value, IdSchema.optional()),
   createdAt: TimestampSchema.optional(),

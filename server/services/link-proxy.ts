@@ -1,4 +1,5 @@
 import type { H3Event } from 'h3'
+import { isServerFetchAllowed } from '../utils/server-fetch-policy'
 
 const PROXY_TIMEOUT_MS = 30_000
 
@@ -79,7 +80,7 @@ function buildUpstreamResponse(upstream: Response, privateCache: boolean): Respo
 }
 
 export async function proxyLinkRequest(event: H3Event, targetUrl: string, options: LinkProxyOptions = {}): Promise<Response> {
-  if (!isPublicHttpUrl(targetUrl))
+  if (!isServerFetchAllowed(event, targetUrl))
     throw createError({ status: 403, statusText: 'Proxy target is not allowed' })
 
   const method = options.method ?? event.method
@@ -90,7 +91,7 @@ export async function proxyLinkRequest(event: H3Event, targetUrl: string, option
   const init: RequestInit & { duplex?: 'half' } = {
     method,
     headers: buildForwardHeaders(event),
-    redirect: 'follow',
+    redirect: 'error',
     signal: controller.signal,
   }
   if (method !== 'GET' && method !== 'HEAD') {

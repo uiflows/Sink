@@ -36,6 +36,8 @@ export default defineNuxtConfig({
     disableBotAccessLog: false,
     disableAutoBackup: false,
     notFoundRedirect: '',
+    requireWriteRateLimit: false,
+    serverFetchAllowedHosts: '', // Empty by default: require explicit trusted hosts for outbound page fetching.
     safeBrowsingDoh: '', // Set to DoH URL to enable auto-detection, e.g. https://family.cloudflare-dns.com/dns-query
     webhookUrl: '',
     webhookSecret: '',

@@ -25,6 +25,21 @@ export function applyInstancePolicy(config, env) {
   // AI remains opt-in; deploying a binding must not silently enable paid inference.
   if (env.DEPLOY_ENABLE_AI !== 'true')
     delete config.ai
-  config.vars = { ...config.vars, NUXT_DATASET: env.DEPLOY_ANALYTICS_DATASET }
+  config.ratelimits = [{
+    name: 'LINK_WRITE_LIMITER',
+    namespace_id: name === 'sink-brand' ? '2026101501' : '2026101502',
+    simple: { limit: 120, period: 60 },
+  }]
+  config.observability = {
+    enabled: true,
+    head_sampling_rate: 1,
+    logs: { enabled: true, head_sampling_rate: 1, invocation_logs: false, persist: true },
+    traces: { enabled: false },
+  }
+  config.vars = {
+    ...config.vars,
+    NUXT_DATASET: env.DEPLOY_ANALYTICS_DATASET,
+    NUXT_REQUIRE_WRITE_RATE_LIMIT: 'true',
+  }
   return config
 }
